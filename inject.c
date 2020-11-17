@@ -1,17 +1,34 @@
 #include <Windows.h>
+#include <tlhelp32.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+DWORD get_pid(char *process_name) {
+
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    PROCESSENTRY32 entry;
+    Process32First(snap, &entry);
+
+    do {
+        if (strcmp(entry.szExeFile, process_name) == 0) {
+            return entry.th32ProcessID;
+        }
+    } while (Process32Next(snap, &entry));
+    return 0;
+}
+
 int main(int argc, char **argv) {
+    get_pid("natspeak.exe");
+
     if (argc != 3) {
-        printf("Usage: inject.exe <pid> <dll_path>\n");
+        printf("Usage: inject.exe <exe_name> <dll_path>\n");
         return 1;
     }
 
-    DWORD pid = atoi(argv[1]);
+    DWORD pid = get_pid(argv[1]);
     if (!pid) {
-        printf("Error: first argument is not a valid pid\n");
+        printf("Error: failed to find process ID for '%s'\n", argv[1]);
         return 1;
     }
 
@@ -50,7 +67,7 @@ int main(int argc, char **argv) {
     WaitForSingleObject((HANDLE)thread_id, INFINITE);
 
     DWORD library_handle;
-    GetExitCodeThread((HANDLE)thread_id, &library_handle);
+    GetExitCodeThread(thread, &library_handle);
     if (!library_handle) {
         printf("Error: LoadLibrary call in remote thread returned NULL\n");
         return 1;
