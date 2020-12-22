@@ -19,8 +19,6 @@ DWORD get_pid(char *process_name) {
 }
 
 int main(int argc, char **argv) {
-    get_pid("natspeak.exe");
-
     if (argc != 3) {
         printf("Usage: inject.exe <exe_name> <dll_path>\n");
         return 1;
